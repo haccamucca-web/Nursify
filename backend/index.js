@@ -108,7 +108,8 @@ app.post('/api/summarize-chunk', async (req, res) => {
             result = await model.generateContent(chunk);
         } catch (geminiError) {
             console.error('Errore esatto durante la chiamata a Gemini (summarize-chunk):', geminiError);
-            return res.status(500).json({ error: 'Errore di comunicazione con l\'API di Gemini.', details: geminiError.message });
+            const errorDetails = geminiError?.message || JSON.stringify(geminiError, Object.getOwnPropertyNames(geminiError)) || 'Errore sconosciuto da Google AI';
+            return res.status(500).json({ error: 'Errore di comunicazione con l\'API di Gemini.', details: errorDetails });
         }
         const response = await result.response;
         const chunkSummary = response.text();
@@ -154,7 +155,8 @@ app.post('/api/refine-summary', async (req, res) => {
             result = await model.generateContent(text);
         } catch (geminiError) {
             console.error('Errore esatto durante la chiamata a Gemini (refine-summary):', geminiError);
-            return res.status(500).json({ error: 'Errore di comunicazione con l\'API di Gemini.', details: geminiError.message });
+            const errorDetails = geminiError?.message || JSON.stringify(geminiError, Object.getOwnPropertyNames(geminiError)) || 'Errore sconosciuto da Google AI';
+            return res.status(500).json({ error: 'Errore di comunicazione con l\'API di Gemini.', details: errorDetails });
         }
         const response = await result.response;
         const refinedText = response.text();
