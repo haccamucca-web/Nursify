@@ -117,9 +117,15 @@ export default function Home() {
       const formData = new FormData();
 
       if (Platform.OS === 'web') {
-        const response = await fetch(file.uri);
-        const blob = await response.blob();
-        formData.append('pdf', blob, file.name);
+        // DocumentPicker on web returns a native File object in the `file` property.
+        // We MUST use this instead of fetching the blob, otherwise multer fails to parse the boundary.
+        if (file.file) {
+          formData.append('pdf', file.file);
+        } else {
+           const response = await fetch(file.uri);
+           const blob = await response.blob();
+           formData.append('pdf', blob, file.name);
+        }
       } else {
         formData.append('pdf', {
           uri: file.uri,
@@ -137,6 +143,8 @@ export default function Home() {
         body: formData,
         headers: {
           'Accept': 'application/json',
+          // DO NOT explicitly set Content-Type to multipart/form-data.
+          // Fetch will automatically set it WITH the correct boundary.
         },
       });
 
