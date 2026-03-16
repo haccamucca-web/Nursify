@@ -163,7 +163,9 @@ export default function SummaryScreen() {
       const data = await response.json();
       
       if (!response.ok || !data.result) {
-        throw new Error(data.error || 'Errore dal server');
+        const errorMessage = data.error || 'Errore dal server';
+        const errorDetails = data.details ? `\nDettagli: ${data.details}` : "";
+        throw new Error(errorMessage + errorDetails);
       }
 
       // Append quiz output or replace text
@@ -174,9 +176,9 @@ export default function SummaryScreen() {
         setSummaryText(data.result);
         Toast.show({ type: 'success', text1: 'Testo Aggiornato!', text2: 'Il riassunto è stato affinato con successo.' });
       }
-    } catch (error) {
+    } catch (error: any) {
        console.error(error);
-       Toast.show({ type: 'error', text1: 'Errore', text2: 'Connessione al server IA fallita.' });
+       Toast.show({ type: 'error', text1: 'Errore', text2: error.message || 'Connessione al server IA fallita.' });
     } finally {
        setIsRefining(false);
     }

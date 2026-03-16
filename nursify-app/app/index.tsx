@@ -177,7 +177,9 @@ export default function Home() {
         const sumData = await sumResponse.json();
         
         if (!sumResponse.ok || !sumData.summary) {
-            throw new Error(sumData.error || `Errore nell'elaborazione del frammento ${i+1}.`);
+            const errorMessage = sumData.error || `Errore nell'elaborazione del frammento ${i+1}.`;
+            const errorDetails = sumData.details ? `\nDettagli: ${sumData.details}` : "";
+            throw new Error(errorMessage + errorDetails);
         }
 
         finalSummary += sumData.summary + "\n\n---\n\n";
