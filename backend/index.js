@@ -1,6 +1,4 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const pdf = require('pdf-parse');
+import pdfParse from 'pdf-parse';
 import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
@@ -56,12 +54,22 @@ app.post('/api/extract-text', upload.single('pdf'), async (req, res) => {
         console.log('Ricevuto PDF, inizia l\'estrazione del testo...');
         
         let text;
+        let parsedData;
         try {
-            const data = await pdf(req.file.buffer);
-            text = data.text;
+            // Gestione sicura dell'importazione mista ES Modules / CommonJS
+            const parseFunction = typeof pdfParse === 'function' ? pdfParse : pdfParse.default;
+            
+            if (!parseFunction) {
+                throw new Error("Impossibile inizializzare la funzione pdfParse.");
+            }
+
+            parsedData = await parseFunction(req.file.buffer);
+            console.log("Testo estratto con successo! Lunghezza:", parsedData.text.length);
+            text = parsedData.text;
+            
         } catch (parseError) {
-            console.error('Errore esatto durante il parsing del PDF:', parseError);
-            return res.status(500).json({ error: 'Impossibile leggere il file PDF (potrebbe essere corrotto o protetto da password).', details: parseError.message });
+            console.error("Errore fatale durante la lettura del PDF:", parseError);
+            return res.status(500).json({ error: "Errore durante l'estrazione del testo dal PDF.", details: parseError.message });
         }
 
         if (!text || text.trim().length === 0) {
