@@ -56,12 +56,14 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [loading, dynamicLoadingText]);
 
+  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+
   const handleLogin = async () => {
     setAuthError('');
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:3000/api/verify-password', {
+      const response = await fetch(`${API_BASE_URL}/api/verify-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
@@ -130,7 +132,7 @@ export default function Home() {
       setDynamicLoadingText(null);
 
       // 1. Extract and Chunk Text
-      const extractResponse = await fetch('http://localhost:3000/api/extract-text', {
+      const extractResponse = await fetch(`${API_BASE_URL}/api/extract-text`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -155,7 +157,7 @@ export default function Home() {
       for (let i = 0; i < chunks.length; i++) {
         setDynamicLoadingText(`Elaborazione frammento clinico ${i + 1} di ${chunks.length}...`);
 
-        const sumResponse = await fetch('http://localhost:3000/api/summarize-chunk', {
+        const sumResponse = await fetch(`${API_BASE_URL}/api/summarize-chunk`, {
             method: 'POST',
             body: JSON.stringify({ chunk: chunks[i], index: i + 1, total: chunks.length }),
             headers: {
