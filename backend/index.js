@@ -10,8 +10,12 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({ origin: '*' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Health Check Route
+app.get('/status', (req, res) => res.send('OK'));
 
 // Set up multer for handling file uploads in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -46,10 +50,17 @@ app.post('/api/extract-text', upload.single('pdf'), async (req, res) => {
             return res.status(400).json({ error: 'Nessun file PDF caricato.' });
         }
 
+        console.log('--- NUOVA RICHIESTA RICEVUTA ---');
         console.log('Ricevuto PDF, inizia l\'estrazione del testo...');
         
-        const parser = new PDFParse({ data: req.file.buffer });
-        const textResult = await parser.getText();
+        let textResult;
+        try {
+            const parser = new PDFParse({ data: req.file.buffer });
+            textResult = await parser.getText();
+        } catch (parseError) {
+            console.error('Errore esatto durante il parsing del PDF:', parseError);
+            return res.status(500).json({ error: 'Impossibile leggere il file PDF (potrebbe essere corrotto o protetto da password).', details: parseError.message });
+        }
         const text = textResult.text;
 
         if (!text || text.trim().length === 0) {
@@ -67,6 +78,7 @@ app.post('/api/extract-text', upload.single('pdf'), async (req, res) => {
         res.json({ chunks: chunks });
 
     } catch (error) {
+        console.error(error);
         console.error('Errore durante l\'estrazione:', error);
         res.status(500).json({ error: 'Errore interno del server durante l\'estrazione del PDF.' });
     }
@@ -91,7 +103,13 @@ app.post('/api/summarize-chunk', async (req, res) => {
         const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest', systemInstruction: RIGOROUS_SYSTEM_PROMPT });
 
         console.log(`Analisi frammento ${index || 'N/A'} di ${total || 'N/A'}...`);
-        const result = await model.generateContent(chunk);
+        let result;
+        try {
+            result = await model.generateContent(chunk);
+        } catch (geminiError) {
+            console.error('Errore esatto durante la chiamata a Gemini (summarize-chunk):', geminiError);
+            return res.status(500).json({ error: 'Errore di comunicazione con l\'API di Gemini.', details: geminiError.message });
+        }
         const response = await result.response;
         const chunkSummary = response.text();
             
@@ -131,7 +149,13 @@ app.post('/api/refine-summary', async (req, res) => {
         const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest', systemInstruction });
 
         console.log(`Esecuzione azione avanzata: ${action}`);
-        const result = await model.generateContent(text);
+        let result;
+        try {
+            result = await model.generateContent(text);
+        } catch (geminiError) {
+            console.error('Errore esatto durante la chiamata a Gemini (refine-summary):', geminiError);
+            return res.status(500).json({ error: 'Errore di comunicazione con l\'API di Gemini.', details: geminiError.message });
+        }
         const response = await result.response;
         const refinedText = response.text();
             

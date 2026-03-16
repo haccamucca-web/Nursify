@@ -21,7 +21,7 @@ export default function SummaryScreen() {
   const [isRefining, setIsRefining] = React.useState(false);
   const { theme, colors } = useTheme();
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+  const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(summaryText);
