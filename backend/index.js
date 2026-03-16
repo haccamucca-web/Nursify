@@ -104,6 +104,46 @@ app.post('/api/summarize-chunk', async (req, res) => {
     }
 });
 
+app.post('/api/refine-summary', async (req, res) => {
+    try {
+        const { text, action } = req.body;
+        
+        if (!text || !action) {
+            return res.status(400).json({ error: 'Testo o azione mancante.' });
+        }
+
+        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'inserisci_qui_la_tua_api_key') {
+            return res.status(500).json({ error: "API Key Gemini mancante." });
+        }
+
+        let systemInstruction = "";
+        if (action === "improve") {
+            systemInstruction = "Sei un editor accademico professionista. Migliora la fluidità, la sintassi e la professionalità del seguente testo, mantenendo intatte tutte le informazioni originali ma elevando il registro stilistico. Restituisci il testo formattato in Markdown.";
+        } else if (action === "rewrite") {
+            systemInstruction = "Sei un tutor didattico eccezionale. Riscrivi il seguente testo semplificando il linguaggio complesso in modo che sia comprensibile anche a uno studente al primo anno o a un profano, pur mantenendo l'accuratezza clinica o tecnica. Usa analogie se necessario. Formatta in Markdown.";
+        } else if (action === "quiz") {
+            systemInstruction = "Sei un creatore di test a risposta multipla. Esamina il testo fornito e genera esattamente 3 domande a scelta multipla basate sui concetti chiave. Per ogni domanda fornisci 4 opzioni di risposta (A, B, C, D) e, subito dopo le domande, mostra le soluzioni corrette con una brevissima spiegazione. Formatta tutto in modo chiaro usando Markdown.";
+        } else {
+            return res.status(400).json({ error: "Azione non valida." });
+        }
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest', systemInstruction });
+
+        console.log(`Esecuzione azione avanzata: ${action}`);
+        const result = await model.generateContent(text);
+        const response = await result.response;
+        const refinedText = response.text();
+            
+        console.log(`Azione completata con successo: ${action}`);
+        res.json({ result: refinedText });
+
+    } catch (error) {
+        console.error('Errore durante il refining:', error);
+        res.status(500).json({ error: 'Errore interno del server durante l\'affinamento del testo.' });
+    }
+});
+
 app.post('/api/verify-password', (req, res) => {
     const { password } = req.body;
     const sitePassword = process.env.SITE_PASSWORD;
