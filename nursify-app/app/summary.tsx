@@ -104,20 +104,24 @@ export default function SummaryScreen() {
       `;
 
       if (Platform.OS === 'web') {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        iframe.document?.open();
-        iframe.document?.write(htmlTemplate);
-        iframe.document?.close();
-        
-        setTimeout(() => {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-          document.body.removeChild(iframe);
-        }, 500);
-        
-        Toast.show({ type: 'success', text1: 'Stampa', text2: 'Preparazione PDF in corso...' });
+        // In Safari iOS (and some other mobile browsers), iframes for printing often fail or show up blank.
+        // A more reliable approach is to open a new window or tab and trigger the print dialog.
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.open();
+          printWindow.document.write(htmlTemplate);
+          printWindow.document.close();
+          
+          // Focus the window and trigger print after a small delay to ensure rendering
+          setTimeout(() => {
+            printWindow.focus();
+            printWindow.print();
+          }, 500);
+          
+          Toast.show({ type: 'success', text1: 'Stampa', text2: 'Preparazione PDF in corso...' });
+        } else {
+           Toast.show({ type: 'error', text1: 'Pop-up Bloccato', text2: 'Abilita i pop-up per esportare il PDF.' });
+        }
         return;
       }
 
