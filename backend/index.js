@@ -100,7 +100,7 @@ app.post('/api/summarize-chunk', async (req, res) => {
         const RIGOROUS_SYSTEM_PROMPT = `Sei un assistente accademico e analista esperto. Il tuo compito è leggere il testo fornito e creare un riassunto molto dettagliato, accurato e strutturato. Adattati automaticamente all'argomento del testo (che sia medico, tecnico, giuridico, umanistico o altro). NON essere troppo sintetico. Devi estrarre e strutturare con precisione i concetti chiave, le definizioni importanti, le procedure o i dati rilevanti presenti nel documento. Struttura l'output in formato Markdown pulito usando titoli (H2, H3), elenchi puntati e paragrafi ben distanziati per facilitare lo studio e la comprensione.`;
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: RIGOROUS_SYSTEM_PROMPT });
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest', systemInstruction: RIGOROUS_SYSTEM_PROMPT });
 
         console.log(`Analisi frammento ${index || 'N/A'} di ${total || 'N/A'}...`);
         let result;
@@ -147,7 +147,7 @@ app.post('/api/refine-summary', async (req, res) => {
         }
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction });
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest', systemInstruction });
 
         console.log(`Esecuzione azione avanzata: ${action}`);
         let result;
