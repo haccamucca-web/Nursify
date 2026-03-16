@@ -80,7 +80,7 @@ app.post('/api/extract-text', upload.single('pdf'), async (req, res) => {
     } catch (error) {
         console.error(error);
         console.error('Errore durante l\'estrazione:', error);
-        res.status(500).json({ error: 'Errore interno del server durante l\'estrazione del PDF.' });
+        res.status(500).json({ error: 'Errore interno del server durante l\'estrazione del PDF.', details: error.message });
     }
 });
 
@@ -100,7 +100,7 @@ app.post('/api/summarize-chunk', async (req, res) => {
         const RIGOROUS_SYSTEM_PROMPT = `Sei un assistente accademico e analista esperto. Il tuo compito è leggere il testo fornito e creare un riassunto molto dettagliato, accurato e strutturato. Adattati automaticamente all'argomento del testo (che sia medico, tecnico, giuridico, umanistico o altro). NON essere troppo sintetico. Devi estrarre e strutturare con precisione i concetti chiave, le definizioni importanti, le procedure o i dati rilevanti presenti nel documento. Struttura l'output in formato Markdown pulito usando titoli (H2, H3), elenchi puntati e paragrafi ben distanziati per facilitare lo studio e la comprensione.`;
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest', systemInstruction: RIGOROUS_SYSTEM_PROMPT });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: RIGOROUS_SYSTEM_PROMPT });
 
         console.log(`Analisi frammento ${index || 'N/A'} di ${total || 'N/A'}...`);
         let result;
@@ -118,7 +118,7 @@ app.post('/api/summarize-chunk', async (req, res) => {
 
     } catch (error) {
         console.error('Errore durante l\'elaborazione:', error);
-        res.status(500).json({ error: 'Errore interno del server durante l\'elaborazione del PDF.' });
+        res.status(500).json({ error: 'Errore interno del server durante l\'elaborazione del PDF.', details: error.message });
     }
 });
 
@@ -146,7 +146,7 @@ app.post('/api/refine-summary', async (req, res) => {
         }
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest', systemInstruction });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction });
 
         console.log(`Esecuzione azione avanzata: ${action}`);
         let result;
@@ -164,7 +164,7 @@ app.post('/api/refine-summary', async (req, res) => {
 
     } catch (error) {
         console.error('Errore durante il refining:', error);
-        res.status(500).json({ error: 'Errore interno del server durante l\'affinamento del testo.' });
+        res.status(500).json({ error: 'Errore interno del server durante l\'affinamento del testo.', details: error.message });
     }
 });
 
